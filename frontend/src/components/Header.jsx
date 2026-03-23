@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radar, Volume2, VolumeX, Bell, BellOff, SlidersHorizontal } from 'lucide-react';
+import { Radar, Volume2, VolumeX, Bell, BellOff, SlidersHorizontal, ShieldAlert } from 'lucide-react';
 import useMemeStore from '../store/useMemeStore';
 import { TextShimmer } from './ui/TextShimmer';
 import { AnimatedBadge } from './ui/AnimatedBadge';
@@ -24,16 +24,22 @@ export default function Header({ activeTab: activeTabProp, onTabChange }) {
   } = useMemeStore();
 
   const activeTab = activeTabProp || storeActiveTab;
-  const tabs = ['dashboard', 'replay', 'compare'];
-  const tabLabels = { dashboard: 'Dashboard', replay: 'Hype Replay', compare: 'Compare' };
+  const tabs = ['dashboard', 'signals', 'replay', 'compare'];
+  const tabLabels = { dashboard: 'Dashboard', signals: 'Signal Feed', replay: 'Hype Replay', compare: 'Compare' };
   const sources = [
     { id: 'cryptopanic', label: 'CryptoPanic' },
     { id: 'lunarcrush', label: 'LunarCrush' },
     { id: 'youtube', label: 'YouTube' },
+    { id: 'google_search', label: 'Google Search' },
   ];
-  const sourceLabels = { cryptopanic: 'CryptoPanic', lunarcrush: 'LunarCrush', youtube: 'YouTube' };
+  const sourceLabels = {
+    cryptopanic: 'CryptoPanic',
+    lunarcrush: 'LunarCrush',
+    youtube: 'YouTube',
+    google_search: 'Google Search',
+  };
   const sourceLabel = sourceLabels[socialSource] || 'CryptoPanic';
-  const sourceUnit = socialSource === 'youtube' ? 'clips' : socialSource === 'lunarcrush' ? 'metrics' : 'articles';
+  const sourceUnit = socialSource === 'youtube' ? 'clips' : socialSource === 'lunarcrush' ? 'metrics' : socialSource === 'google_search' ? 'results' : 'articles';
   const statusLabel = liveFeedStatus === 'connected'
     ? 'Live connected'
     : liveFeedStatus === 'reconnecting'
@@ -88,6 +94,17 @@ export default function Header({ activeTab: activeTabProp, onTabChange }) {
             color="#ff3355"
             className="ml-2 py-0 h-5"
           />
+          {liveFeedStatus !== 'connected' ? (
+            <span className={cn(
+              "inline-flex items-center gap-1.5 ml-2 px-2 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest",
+              liveFeedStatus === 'reconnecting'
+                ? 'text-orange border-orange/20 bg-orange/10'
+                : 'text-yellow border-yellow/20 bg-yellow/10'
+            )}>
+              <ShieldAlert className="w-3.5 h-3.5" />
+              {liveFeedStatus === 'reconnecting' ? 'Fallback mode' : 'Fallback mode'}
+            </span>
+          ) : null}
         </div>
 
         <nav className="flex items-center gap-1.5 bg-surface/40 p-1 rounded-xl border border-border/30">

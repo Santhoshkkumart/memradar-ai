@@ -26,6 +26,8 @@ app.use(express.json());
 // Routes
 app.use('/api/coins', require('./routes/coins'));
 app.use('/api/social', require('./routes/social'));
+app.use('/api/summary', require('./routes/summary'));
+app.use('/api/search', require('./routes/search'));
 app.use('/api/youtube', require('./routes/youtube'));
 app.use('/api/sentiment', require('./routes/sentiment'));
 app.use('/api/predict', require('./routes/predict'));

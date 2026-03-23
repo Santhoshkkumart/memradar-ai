@@ -13,7 +13,11 @@ async function analyzeWithGemini(systemPrompt, userMessage) {
       {
         contents: [{
           parts: [{ text: systemPrompt + '\n\n' + userMessage }]
-        }]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 384,
+        }
       },
       {
         timeout: 10000,

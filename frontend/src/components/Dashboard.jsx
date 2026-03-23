@@ -6,10 +6,13 @@ import StatStrip from './StatStrip';
 import SentimentArc from './SentimentArc';
 import HypeStageBar from './HypeStageBar';
 import MoonshotCard from './MoonshotCard';
+import GoogleSearchCard from './GoogleSearchCard';
+import CoinSummaryCard from './CoinSummaryCard';
 import PredictionCard from './PredictionCard';
 import AlertFeed from './AlertFeed';
 import FearGreedGauge from './FearGreedGauge';
 import PostsFeed from './PostsFeed';
+import GoogleTrendsCard from './GoogleTrendsCard';
 import { getStageLabel, getStageColor } from '../utils/hypeScore';
 import { ChevronRight, BarChart3, Brain, MessageSquare, Radar } from 'lucide-react';
 import { Radar as RadarEffect } from './ui/RadarEffect';
@@ -122,6 +125,8 @@ export default function Dashboard() {
             </motion.div>
 
             {/* Section tabs — Floating style */}
+            <CoinSummaryCard />
+
             <div className="sticky top-0 z-30 py-2 bg-bg/80 backdrop-blur-md">
               <div className="flex gap-2 bg-slate-900/50 p-1.5 rounded-[20px] border border-white/10 w-fit">
                 {sections.map(s => {
@@ -168,7 +173,11 @@ export default function Dashboard() {
                     <StatStrip />
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <HypeStageBar />
-                      <SentimentArc />
+                      <div className="space-y-4">
+                        <GoogleTrendsCard />
+                        <GoogleSearchCard />
+                        <SentimentArc />
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -188,7 +197,11 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <HypeStageBar />
-                      <SentimentArc />
+                      <div className="space-y-4">
+                        <GoogleTrendsCard />
+                        <GoogleSearchCard />
+                        <SentimentArc />
+                      </div>
                     </div>
                   </motion.div>
                 )}

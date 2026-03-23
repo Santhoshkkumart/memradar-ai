@@ -1,5 +1,34 @@
 const axios = require('axios');
 
+const CRYPTOPANIC_BASE = 'https://cryptopanic.com/api/v1/posts/';
+const CRYPTOPANIC_TIMEOUT_MS = 8000;
+let cryptoPanicWarningUntil = 0;
+
+function normalizeCoinSymbol(coinSymbol) {
+  return String(coinSymbol || '').trim().toUpperCase();
+}
+
+function warnOnce(message) {
+  if (Date.now() < cryptoPanicWarningUntil) return;
+  cryptoPanicWarningUntil = Date.now() + 5 * 60 * 1000;
+  console.warn(message);
+}
+
+function parseResults(payload) {
+  const results = payload?.results;
+  if (Array.isArray(results)) return results;
+  if (Array.isArray(payload)) return payload;
+  return [];
+}
+
+async function fetchCryptoPanic(params) {
+  const response = await axios.get(CRYPTOPANIC_BASE, {
+    params,
+    timeout: CRYPTOPANIC_TIMEOUT_MS,
+  });
+  return response.data;
+}
+
 async function getNewsForCoin(coinSymbol) {
   try {
     const apiKey = process.env.CRYPTOPANIC_KEY;
@@ -7,35 +36,72 @@ async function getNewsForCoin(coinSymbol) {
       return getMockNews(coinSymbol);
     }
 
-    const response = await axios.get('https://cryptopanic.com/api/v1/posts/', {
-      params: {
+    const coin = normalizeCoinSymbol(coinSymbol);
+    const requestVariants = [
+      {
         auth_token: apiKey,
-        currencies: coinSymbol.toUpperCase(),
+        currencies: coin,
         public: true,
         kind: 'news',
         filter: 'rising',
       },
-      timeout: 8000,
-    });
+      {
+        auth_token: apiKey,
+        currencies: coin,
+        kind: 'news',
+        filter: 'rising',
+      },
+      {
+        auth_token: apiKey,
+        kind: 'news',
+        filter: 'rising',
+      },
+    ];
 
-    const results = response.data?.results;
-    if (!results || !Array.isArray(results) || results.length === 0) {
+    let lastError = null;
+    for (const params of requestVariants) {
+      try {
+        const payload = await fetchCryptoPanic(params);
+        const results = parseResults(payload);
+
+        if (results.length === 0) {
+          continue;
+        }
+
+        return results.map((post) => ({
+          title: post.title,
+          source: post.source?.title || 'Unknown',
+          published_at: post.published_at,
+          url: post.url,
+          positive_votes: post.votes?.positive || 0,
+          negative_votes: post.votes?.negative || 0,
+          sentiment: (post.votes?.positive || 0) > (post.votes?.negative || 0) ? 'bullish' : 'bearish',
+          score: (post.votes?.positive || 0) - (post.votes?.negative || 0),
+          text: post.title,
+        }));
+      } catch (error) {
+        lastError = error;
+        const status = error?.response?.status;
+        if (status && ![404, 429].includes(status)) {
+          break;
+        }
+      }
+    }
+
+    if (lastError) {
+      const status = lastError?.response?.status;
+      if (![404, 429].includes(status)) {
+        warnOnce(`[CryptoPanic] Fetch failed${status ? ` (${status})` : ''}, using mock news: ${lastError.message}`);
+      }
       return getMockNews(coinSymbol);
     }
 
-    return results.map((post) => ({
-      title: post.title,
-      source: post.source?.title || 'Unknown',
-      published_at: post.published_at,
-      url: post.url,
-      positive_votes: post.votes?.positive || 0,
-      negative_votes: post.votes?.negative || 0,
-      sentiment: (post.votes?.positive || 0) > (post.votes?.negative || 0) ? 'bullish' : 'bearish',
-      score: (post.votes?.positive || 0) - (post.votes?.negative || 0),
-      text: post.title,
-    }));
+    return getMockNews(coinSymbol);
   } catch (error) {
-    console.error('[CryptoPanic] Fetch failed:', error.message);
+    const status = error?.response?.status;
+    if (![404, 429].includes(status)) {
+      warnOnce(`[CryptoPanic] Fetch failed${status ? ` (${status})` : ''}, using mock news: ${error.message}`);
+    }
     return getMockNews(coinSymbol);
   }
 }

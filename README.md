@@ -40,6 +40,7 @@ Edit `backend/.env` and set:
 - `REDDIT_CLIENT_ID`
 - `REDDIT_SECRET`
 - `YOUTUBE_API_KEY`
+- `SERPAPI_KEY` optional if you later swap the trends service to SerpAPI
 - `CORS_ORIGIN`
 
 If the frontend is hosted separately, set `VITE_API_BASE_URL` in your build or deployment environment to the backend URL.
@@ -80,7 +81,9 @@ For Docker-based deploys, keep your secrets in `backend/.env` or the platform's 
 - Reddit or YouTube as the selectable social source
 - Live DEXScreener snapshots in the compare view
 - CoinGecko market data
+- Google Trends breakout data
 - Groq with Gemini fallback for analysis
+- Dedicated Signal Feed timeline
 - Demo mode fallback when a provider is unavailable
 
 ## Tech Stack

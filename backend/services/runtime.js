@@ -13,6 +13,7 @@ function getConfiguredProviders() {
     cryptopanic: Boolean(process.env.CRYPTOPANIC_KEY && process.env.CRYPTOPANIC_KEY !== 'your_cryptopanic_key_here'),
     lunarcrush: Boolean(process.env.LUNARCRUSH_KEY && process.env.LUNARCRUSH_KEY !== 'your_lunarcrush_key_here'),
     youtube: Boolean(process.env.YOUTUBE_API_KEY && process.env.YOUTUBE_API_KEY !== 'your_youtube_api_key_here'),
+    serpapi: Boolean(process.env.SERPAPI_KEY && process.env.SERPAPI_KEY !== 'your_serpapi_key_here'),
   };
 }
 
@@ -41,6 +42,10 @@ function getMissingProductionSecrets() {
 
   if (!process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_API_KEY === 'your_youtube_api_key_here') {
     missing.push('YOUTUBE_API_KEY');
+  }
+
+  if (!process.env.SERPAPI_KEY || process.env.SERPAPI_KEY === 'your_serpapi_key_here') {
+    missing.push('SERPAPI_KEY');
   }
 
   return missing;

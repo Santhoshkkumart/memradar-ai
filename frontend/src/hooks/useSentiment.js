@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useMemeStore from '../store/useMemeStore';
-import { fetchSocialPosts, analyzeSentiment, classifyHypeStage, getPrediction, generateAlert } from '../api/client';
+import { fetchSocialPosts, fetchSocialData, analyzeSentiment, classifyHypeStage, getPrediction, generateAlert } from '../api/client';
 
 const DEMO_PIPELINE = {
   floki: {
@@ -85,8 +85,135 @@ function getDemoData(coinName) {
   return DEMO_PIPELINE[key] || DEMO_PIPELINE.pepe;
 }
 
+function getDemoTrends(coinName) {
+  const key = String(coinName || '').trim().toUpperCase();
+  const trends = {
+    PEPE: {
+      current_score: 72,
+      peak_score: 88,
+      rising: true,
+      velocity: 12,
+      breakout: true,
+      top_countries: [
+        { country: 'India', score: 100 },
+        { country: 'Philippines', score: 84 },
+        { country: 'United States', score: 71 },
+        { country: 'Nigeria', score: 68 },
+        { country: 'Vietnam', score: 55 },
+      ],
+      related_queries: [
+        'pepe coin price',
+        'pepe coin buy',
+        'pepe coin binance',
+        'pepe coin prediction',
+        'pepe coin wallet',
+      ],
+      keyword_used: `${coinName} coin`,
+    },
+    FLOKI: {
+      current_score: 81,
+      peak_score: 91,
+      rising: true,
+      velocity: 18,
+      breakout: true,
+      top_countries: [
+        { country: 'Nigeria', score: 100 },
+        { country: 'India', score: 92 },
+        { country: 'Vietnam', score: 78 },
+        { country: 'Philippines', score: 74 },
+        { country: 'Indonesia', score: 61 },
+      ],
+      related_queries: [
+        'floki coin price',
+        'floki inu',
+        'floki binance listing',
+        'floki coin buy',
+        'floki coin prediction',
+      ],
+      keyword_used: `${coinName} coin`,
+    },
+    DOGE: {
+      current_score: 55,
+      peak_score: 65,
+      rising: false,
+      velocity: -3,
+      breakout: false,
+      top_countries: [
+        { country: 'United States', score: 100 },
+        { country: 'United Kingdom', score: 71 },
+        { country: 'Canada', score: 64 },
+        { country: 'Australia', score: 58 },
+        { country: 'Germany', score: 42 },
+      ],
+      related_queries: [
+        'dogecoin price',
+        'dogecoin elon musk',
+        'dogecoin wallet',
+        'dogecoin prediction',
+        'dogecoin coinbase',
+      ],
+      keyword_used: `${coinName} coin`,
+    },
+    SHIB: {
+      current_score: 28,
+      peak_score: 55,
+      rising: false,
+      velocity: -8,
+      breakout: false,
+      top_countries: [
+        { country: 'United States', score: 100 },
+        { country: 'Japan', score: 68 },
+        { country: 'India', score: 55 },
+        { country: 'South Korea', score: 44 },
+        { country: 'Brazil', score: 38 },
+      ],
+      related_queries: [
+        'shiba inu price',
+        'shib coin burn',
+        'shib vs doge',
+        'shib coin sell',
+        'shib coin future',
+      ],
+      keyword_used: `${coinName} coin`,
+    },
+    BONK: {
+      current_score: 61,
+      peak_score: 74,
+      rising: true,
+      velocity: 9,
+      breakout: false,
+      top_countries: [
+        { country: 'United States', score: 100 },
+        { country: 'South Korea', score: 88 },
+        { country: 'Vietnam', score: 72 },
+        { country: 'Philippines', score: 65 },
+        { country: 'India', score: 58 },
+      ],
+      related_queries: [
+        'bonk coin solana',
+        'bonk price',
+        'bonk coin buy',
+        'bonk coin prediction',
+        'bonk coin exchange',
+      ],
+      keyword_used: `${coinName} coin`,
+    },
+  };
+
+  return trends[key] || {
+    current_score: 30,
+    peak_score: 45,
+    rising: false,
+    velocity: 0,
+    breakout: false,
+    top_countries: [],
+    related_queries: [],
+    keyword_used: `${coinName} coin`,
+  };
+}
+
 export default function useSentiment() {
-  const { selectedCoin, socialSource, setPosts, setVelocity, setSocial, setSentiment, setHypeStage, setPrediction, addAlert, setLoading, setError, clearError, setScanSummary } = useMemeStore();
+  const { selectedCoin, socialSource, setPosts, setVelocity, setSocial, setTrends, setSentiment, setHypeStage, setPrediction, addAlert, setLoading, setError, clearError, setScanSummary } = useMemeStore();
   const intervalRef = useRef(null);
   const alertedCoins = useRef(new Set());
   const lastRunRef = useRef(new Map());
@@ -120,9 +247,15 @@ export default function useSentiment() {
       setLoading('prediction', true);
 
       try {
-        const socialData = await fetchSocialPosts(socialSource, coinName);
+        const [socialData, trendsData] = await Promise.all([
+          fetchSocialPosts(socialSource, coinName),
+          fetchSocialData(coinName),
+        ]);
         if (socialData.social) {
           setSocial(socialData.social);
+        }
+        if (trendsData?.trends) {
+          setTrends(trendsData.trends);
         }
         if (shouldSkipRun(socialSource, coinName, socialData.posts)) {
           setPosts(socialData.posts);
@@ -179,6 +312,7 @@ export default function useSentiment() {
         }
 
         setError('sentiment', 'Backend unavailable, using demo analysis');
+        setTrends(getDemoTrends(coinName));
         setLoading('posts', false);
         setLoading('sentiment', false);
         setLoading('prediction', false);

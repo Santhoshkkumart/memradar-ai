@@ -51,6 +51,7 @@ const useMemeStore = create((set) => ({
   fearGreed: null,
   velocity: null,
   social: null,
+  trends: null,
   activeTab: readStoredValue('memeradar.activeTab', 'dashboard'),
   socialSource: 'cryptopanic',
   lastScanAt: null,
@@ -105,6 +106,7 @@ const useMemeStore = create((set) => ({
     posts: [],
     velocity: null,
     social: null,
+    trends: null,
   }),
   setPosts: (posts) => set({ posts }),
   setSentiment: (data) => set({ sentiment: data }),
@@ -116,6 +118,7 @@ const useMemeStore = create((set) => ({
   setFearGreed: (data) => set({ fearGreed: data }),
   setVelocity: (data) => set({ velocity: data }),
   setSocial: (data) => set({ social: data }),
+  setTrends: (data) => set({ trends: data }),
   setActiveTab: (tab) => {
     writeStoredValue('memeradar.activeTab', tab);
     set({ activeTab: tab });

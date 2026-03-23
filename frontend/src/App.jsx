@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import HypeReplay from './components/HypeReplay';
 import CoinCompare from './components/CoinCompare';
+import SignalFeed from './components/SignalFeed';
 import TickerTape from './components/TickerTape';
 import useCoins from './hooks/useCoins';
 import useSentiment from './hooks/useSentiment';
@@ -42,6 +43,7 @@ export default function App() {
         <div className="flex-grow flex flex-col w-full">
           <main className="flex-grow pb-16 px-4 max-w-[1600px] mx-auto w-full pt-14">
             {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'signals' && <SignalFeed />}
             {activeTab === 'replay' && <HypeReplay />}
             {activeTab === 'compare' && <CoinCompare />}
           </main>

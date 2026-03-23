@@ -12,8 +12,8 @@ async function analyzeWithGroq(systemPrompt, userMessage) {
       'https://api.groq.com/openai/v1/chat/completions',
       {
         model: 'llama-3.1-8b-instant',
-        max_completion_tokens: 1000,
-        temperature: 0.3,
+        max_completion_tokens: 384,
+        temperature: 0.2,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }

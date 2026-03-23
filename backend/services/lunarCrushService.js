@@ -1,6 +1,20 @@
 const axios = require('axios');
 
 const LUNARCRUSH_BASE = 'https://lunarcrush.com/api4/public';
+const COMMON_COIN_IDS = {
+  PEPE: 'pepe',
+  DOGE: 'dogecoin',
+  DOGECOIN: 'dogecoin',
+  SHIB: 'shiba-inu',
+  SHIBA: 'shiba-inu',
+  FLOKI: 'floki',
+  BONK: 'bonk',
+};
+
+let lunarCrushWarningUntil = 0;
+let lunarCrushCoinListCache = null;
+let lunarCrushCoinListPromise = null;
+const lunarCrushSocialCache = new Map();
 
 function getApiKey() {
   return String(process.env.LUNARCRUSH_KEY || '').trim();
@@ -9,6 +23,8 @@ function getApiKey() {
 function createHeaders(apiKey) {
   return {
     Authorization: `Bearer ${apiKey}`,
+    'x-api-key': apiKey,
+    Accept: 'application/json',
   };
 }
 
@@ -16,11 +32,21 @@ function normalizeCoinKey(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function normalizeCoinSymbol(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
 function parseListPayload(payload) {
   const data = payload?.data;
   if (Array.isArray(data)) return data;
   if (Array.isArray(payload)) return payload;
   return [];
+}
+
+function warnOnce(message) {
+  if (Date.now() < lunarCrushWarningUntil) return;
+  lunarCrushWarningUntil = Date.now() + 5 * 60 * 1000;
+  console.warn(message);
 }
 
 async function fetchLunarCrush(path, params = {}) {
@@ -33,17 +59,37 @@ async function fetchLunarCrush(path, params = {}) {
   return response.data;
 }
 
+async function getCoinList() {
+  if (lunarCrushCoinListCache) {
+    return lunarCrushCoinListCache;
+  }
+
+  if (!lunarCrushCoinListPromise) {
+    lunarCrushCoinListPromise = fetchLunarCrush('/coins/list/v1', {
+      sort: 'galaxy_score',
+      limit: 250,
+    })
+      .then((payload) => parseListPayload(payload))
+      .then((coins) => {
+        lunarCrushCoinListCache = Array.isArray(coins) ? coins : [];
+        return lunarCrushCoinListCache;
+      })
+      .catch(() => []);
+  }
+
+  return lunarCrushCoinListPromise;
+}
+
 async function resolveCoinId(coinSymbol) {
   const key = normalizeCoinKey(coinSymbol);
   if (!key) return null;
 
   try {
-    const payload = await fetchLunarCrush('/coins/list/v1', {
-      sort: 'galaxy_score',
-      limit: 250,
-    });
+    const symbolKey = normalizeCoinSymbol(coinSymbol);
+    const commonId = COMMON_COIN_IDS[symbolKey];
+    if (commonId) return commonId;
 
-    const coins = parseListPayload(payload);
+    const coins = await getCoinList();
     if (coins.length === 0) return null;
 
     const exact = coins.find((coin) => {
@@ -64,7 +110,6 @@ async function resolveCoinId(coinSymbol) {
 
     return partial?.id || null;
   } catch (error) {
-    console.error('[LunarCrush] Coin list fetch failed:', error.message);
     return null;
   }
 }
@@ -76,15 +121,21 @@ async function getSocialData(coinSymbol) {
       return getMockSocialData(coinSymbol);
     }
 
+    const cacheKey = normalizeCoinSymbol(coinSymbol);
+    const cached = lunarCrushSocialCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < 10 * 60 * 1000) {
+      return cached.data;
+    }
+
     const coinId = (await resolveCoinId(coinSymbol)) || normalizeCoinKey(coinSymbol);
     const payload = await fetchLunarCrush(`/coins/${coinId}/v1`);
     const data = payload?.data || payload;
 
-    if (!data) {
+    if (!data || typeof data !== 'object') {
       return getMockSocialData(coinSymbol);
     }
 
-    return {
+    const normalized = {
       galaxy_score: data.galaxy_score ?? data.galaxyScore ?? null,
       alt_rank: data.alt_rank ?? data.altRank ?? null,
       social_volume_24h: data.social_volume_24h ?? data.socialVolume24h ?? null,
@@ -94,9 +145,17 @@ async function getSocialData(coinSymbol) {
       influencers_active: data.influencers_active ?? data.influencersActive ?? null,
       price_change_24h: data.percent_change_24h ?? data.price_change_24h ?? null,
     };
+    lunarCrushSocialCache.set(cacheKey, { data: normalized, at: Date.now() });
+    return normalized;
   } catch (error) {
     const status = error?.response?.status;
-    console.error(`[LunarCrush] Fetch failed${status ? ` (${status})` : ''}:`, error.message);
+    const cacheKey = normalizeCoinSymbol(coinSymbol);
+    const cached = lunarCrushSocialCache.get(cacheKey);
+    if (cached && Date.now() - cached.at < 30 * 60 * 1000) {
+      return cached.data;
+    }
+
+    warnOnce(`[LunarCrush] Fetch failed${status ? ` (${status})` : ''}, using mock data: ${error.message}`);
     return getMockSocialData(coinSymbol);
   }
 }
@@ -128,7 +187,7 @@ async function getTopCoinsBySocial() {
       change_24h: c.percent_change_24h ?? c.price_change_24h ?? null,
     }));
   } catch (error) {
-    console.error('[LunarCrush] Top coins fetch failed:', error.message);
+    warnOnce(`[LunarCrush] Top coins fetch failed, using null response: ${error.message}`);
     return null;
   }
 }

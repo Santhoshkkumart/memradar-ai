@@ -9,12 +9,22 @@ import { cn } from '@/lib/utils';
 export default function MoonshotCard() {
   const { sentiment, velocity, hypeStage, selectedCoin, loading } = useMemeStore();
   const lastValidProbRef = useRef(0);
+  const activeCoinIdRef = useRef(selectedCoin?.id || '');
 
   const rawMoonshotProb = getMoonshotProbability(sentiment, velocity, hypeStage);
-  const moonshotProb = rawMoonshotProb > 0 ? rawMoonshotProb : lastValidProbRef.current;
+  const coinId = selectedCoin?.id || '';
+  const isNewCoin = activeCoinIdRef.current !== coinId;
+  const moonshotProb = rawMoonshotProb > 0 ? rawMoonshotProb : (isNewCoin ? 0 : lastValidProbRef.current);
   const pattern = getPatternMatch(hypeStage?.hype_stage, selectedCoin?.name);
   const circumference = 2 * Math.PI * 65;
   const offset = circumference - (moonshotProb / 100) * circumference;
+
+  useEffect(() => {
+    if (activeCoinIdRef.current !== coinId) {
+      activeCoinIdRef.current = coinId;
+      lastValidProbRef.current = 0;
+    }
+  }, [coinId]);
 
   useEffect(() => {
     if (rawMoonshotProb > 0) {
@@ -23,9 +33,7 @@ export default function MoonshotCard() {
   }, [rawMoonshotProb]);
 
   const isRefreshing = loading.posts || loading.sentiment || loading.prediction;
-  const displayValue = isRefreshing && rawMoonshotProb === 0 && lastValidProbRef.current > 0
-    ? `${lastValidProbRef.current}%`
-    : `${moonshotProb}%`;
+  const displayValue = isRefreshing && moonshotProb === 0 ? '...' : `${moonshotProb}%`;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-purple/30 p-6 h-full group"

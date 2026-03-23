@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Share2, MessageCircle, ArrowBigUp, ExternalLink, Globe, Youtube, Star, Users, BarChart3, TrendingUp } from 'lucide-react';
+import { MessageSquare, Share2, MessageCircle, ArrowBigUp, ExternalLink, Globe, Youtube, Star, Users, BarChart3, TrendingUp, Search } from 'lucide-react';
 import useMemeStore from '../store/useMemeStore';
 import { cn } from '@/lib/utils';
 
@@ -8,11 +8,12 @@ export default function PostsFeed() {
   const { posts, loading, selectedCoin, socialSource, social } = useMemeStore();
   const isYouTube = socialSource === 'youtube';
   const isLunarCrush = socialSource === 'lunarcrush';
+  const isGoogleSearch = socialSource === 'google_search';
   const isCryptoPanic = socialSource === 'cryptopanic';
 
-  const sourceLabel = isYouTube ? 'YouTube Pulse' : isLunarCrush ? 'LunarCrush Metrics' : 'News Pulse';
-  const sourceSubtitle = isYouTube ? 'Video conversation stream' : isLunarCrush ? 'Social intelligence data' : 'Crypto news stream';
-  const sourceCountLabel = isYouTube ? 'Clips Captured' : isLunarCrush ? 'Metrics Tracked' : 'Articles Found';
+  const sourceLabel = isYouTube ? 'YouTube Pulse' : isLunarCrush ? 'LunarCrush Metrics' : isGoogleSearch ? 'Google Search Pulse' : 'News Pulse';
+  const sourceSubtitle = isYouTube ? 'Video conversation stream' : isLunarCrush ? 'Social intelligence data' : isGoogleSearch ? 'Search result stream' : 'Crypto news stream';
+  const sourceCountLabel = isYouTube ? 'Clips Captured' : isLunarCrush ? 'Metrics Tracked' : isGoogleSearch ? 'Results Found' : 'Articles Found';
 
   const formatTime = (utc) => {
     if (!utc) return '';
@@ -96,6 +97,104 @@ export default function PostsFeed() {
                 </motion.div>
               );
             })
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (isGoogleSearch) {
+    const searchResults = Array.isArray(posts) ? posts : [];
+
+    return (
+      <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-6 shadow-2xl border border-border/30 overflow-hidden h-full">
+        <div className="absolute -top-10 -right-10 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+          <Search className="w-40 h-40 text-cyan" />
+        </div>
+
+        <div className="relative flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl border bg-cyan/10 border-cyan/20">
+              <Search className="w-5 h-5 text-cyan" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white tracking-tight uppercase">{sourceLabel}</h3>
+              <span className="text-[10px] text-muted font-mono uppercase tracking-widest">{sourceSubtitle}</span>
+            </div>
+          </div>
+          <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10">
+            <span className="text-[10px] font-black text-muted tracking-tighter uppercase">{searchResults.length} {sourceCountLabel}</span>
+          </div>
+        </div>
+
+        <div className="relative space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+          {loading.posts ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="loader mb-6 scale-75"></div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted animate-pulse">Scanning Search Results...</p>
+            </div>
+          ) : searchResults.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center opacity-40">
+              <Search className="w-12 h-12 mb-3 text-muted" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted">No search results for {selectedCoin?.name}</p>
+            </div>
+          ) : (
+            searchResults.map((post, i) => (
+              <motion.a
+                key={`search-post-${i}`}
+                href={post.url && post.url !== '#' ? post.url : undefined}
+                target={post.url && post.url !== '#' ? '_blank' : undefined}
+                rel={post.url && post.url !== '#' ? 'noopener noreferrer' : undefined}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="block relative group/card bg-white/5 hover:bg-white/[0.08] border border-white/5 hover:border-white/10 rounded-2xl p-4 transition-all duration-300"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl border flex items-center justify-center flex-shrink-0 bg-cyan/10 border-cyan/20 group-hover/card:scale-110 transition-transform">
+                    <Search className="w-5 h-5 text-cyan" />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-cyan">
+                        {post.source || 'Google'}
+                      </span>
+                      <span className="text-[10px] text-muted">·</span>
+                      <span className="text-[10px] text-muted font-medium">
+                        {post.search_query ? post.search_query : 'Search result'}
+                      </span>
+
+                      <div className="ml-auto px-2 py-0.5 rounded-full text-[9px] font-black uppercase border text-muted bg-white/5 border-white/10">
+                        Result
+                      </div>
+                    </div>
+
+                    <p className="text-sm font-bold text-white leading-snug mb-3 group-hover/card:text-cyan transition-colors">
+                      {post.title}
+                    </p>
+
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-muted hover:text-white transition-colors">
+                        <ArrowBigUp className="w-4 h-4" />
+                        <span className="text-[10px] font-black font-mono">{post.score}</span>
+                      </div>
+                      {post.snippet ? (
+                        <div className="text-[10px] text-slate-400 line-clamp-1">
+                          {post.snippet}
+                        </div>
+                      ) : null}
+
+                      {post.url && post.url !== '#' && (
+                        <div className="ml-auto p-1.5 rounded-lg bg-white/5 hover:bg-cyan/10 hover:text-cyan transition-all">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.a>
+            ))
           )}
         </div>
       </div>

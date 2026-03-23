@@ -32,12 +32,44 @@ export async function fetchLunarCrushData(coin) {
   return response.data;
 }
 
+export async function fetchGoogleSearchResults(coin) {
+  const response = await api.get(`/api/search/google/${coin}`);
+  return response.data;
+}
+
+export async function fetchSocialData(coin) {
+  const response = await api.get(`/api/social/${coin}`);
+  return response.data;
+}
+
+export async function fetchCoinSummary(coin) {
+  const response = await api.get(`/api/summary/${coin}`);
+  return response.data;
+}
+
 export async function fetchSocialPosts(source, coin) {
   if (source === 'youtube') {
     return fetchYouTubePosts(coin);
   }
   if (source === 'lunarcrush') {
     return fetchLunarCrushData(coin);
+  }
+  if (source === 'google_search') {
+    const search = await fetchGoogleSearchResults(coin);
+    return {
+      posts: (search.top_results || []).map((item, index) => ({
+        title: item.title,
+        source: item.source || 'Google',
+        published_at: search.cached_at,
+        url: item.link || '#',
+        score: Math.max(1000 - (index * 150), 100),
+        sentiment: 'neutral',
+        snippet: item.snippet || '',
+        search_query: search.query,
+      })),
+      velocity: null,
+      search,
+    };
   }
   return fetchCryptoPanicNews(coin);
 }
