@@ -1,14 +1,29 @@
 const axios = require('axios');
 const { isDemoMode } = require('./runtime');
+const { withRetry } = require('./safety');
+
+let coingeckoCooldownUntil = 0;
+
+function tripCooldown(ms = 60000) {
+  coingeckoCooldownUntil = Date.now() + ms;
+}
 
 async function getTrendingCoins() {
   if (isDemoMode()) {
     return getMockTrendingCoins();
   }
 
+  if (Date.now() < coingeckoCooldownUntil) {
+    return getMockTrendingCoins();
+  }
+
   try {
-    const response = await axios.get('https://api.coingecko.com/api/v3/search/trending');
+    const response = await withRetry(
+      () => axios.get('https://api.coingecko.com/api/v3/search/trending', { timeout: 8000 }),
+      { retries: 1, delayMs: 300, label: 'CoinGecko trending' }
+    );
     const coins = response.data.coins || [];
+    coingeckoCooldownUntil = 0;
     return coins.slice(0, 10).map(c => ({
       id: c.item.id,
       name: c.item.name,
@@ -20,6 +35,7 @@ async function getTrendingCoins() {
     }));
   } catch (error) {
     console.error('[CoinGecko] Trending fetch failed:', error.message);
+    tripCooldown();
     return getMockTrendingCoins();
   }
 }
@@ -29,17 +45,27 @@ async function getCoinPrice(coinId) {
     return getMockPrice(coinId);
   }
 
+  if (Date.now() < coingeckoCooldownUntil) {
+    return getMockPrice(coinId);
+  }
+
   try {
-    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-      params: { ids: coinId, vs_currencies: 'usd', include_24hr_change: true }
-    });
+    const response = await withRetry(
+      () => axios.get('https://api.coingecko.com/api/v3/simple/price', {
+        params: { ids: coinId, vs_currencies: 'usd', include_24hr_change: true },
+        timeout: 8000
+      }),
+      { retries: 1, delayMs: 300, label: 'CoinGecko price' }
+    );
     const data = response.data[coinId];
+    coingeckoCooldownUntil = 0;
     return {
       price_usd: data ? data.usd : null,
       change_24h: data ? data.usd_24h_change : null
     };
   } catch (error) {
     console.error('[CoinGecko] Price fetch failed for', coinId);
+    tripCooldown();
     return getMockPrice(coinId);
   }
 }

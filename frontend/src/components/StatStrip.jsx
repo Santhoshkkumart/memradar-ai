@@ -5,12 +5,13 @@ import useMemeStore from '../store/useMemeStore';
 import { cn } from '@/lib/utils';
 
 export default function StatStrip() {
-  const { sentiment, velocity, hypeStage } = useMemeStore();
+  const { sentiment, velocity, hypeStage, social } = useMemeStore();
 
   const spikePercent = velocity ? Math.round(velocity.velocity_ratio * 100) : 0;
   const sentScore = sentiment?.sentiment_score || 0;
   const velRatio = velocity?.velocity_ratio || 0;
   const botRisk = sentiment?.coordinated_flag ? 'HIGH' : 'LOW';
+  const galaxyScore = social?.galaxy_score;
 
   const stats = [
     {
@@ -41,13 +42,13 @@ export default function StatStrip() {
       statusColor: 'text-orange bg-orange/10'
     },
     {
-      label: 'Bot Risk',
-      value: botRisk,
-      subtitle: sentiment?.confidence ? `${sentiment.confidence}% conf.` : '—',
-      color: botRisk === 'LOW' ? 'from-purple/50 to-indigo-500/50' : 'from-red/50 to-rose-500/50',
+      label: 'Galaxy Score',
+      value: galaxyScore != null ? `${galaxyScore}` : '—',
+      subtitle: social?.alt_rank ? `Alt Rank #${social.alt_rank}` : '—',
+      color: 'from-violet-500/50 to-purple/50',
       icon: ShieldAlert,
-      status: 'Security',
-      statusColor: 'text-yellow bg-yellow/10'
+      status: 'LunarCrush',
+      statusColor: 'text-violet-400 bg-violet-400/10'
     },
   ];
 
@@ -111,7 +112,7 @@ export default function StatStrip() {
               {/* Sparkline visualization for extra visual pop */}
               <div className="h-6 w-full flex items-end gap-0.5 opacity-30 group-hover:opacity-60 transition-opacity">
                 {[40, 70, 45, 90, 65, 85, 50, 75, 40, 60].map((h, idx) => (
-                  <motion.div 
+                  <motion.div
                     key={idx}
                     initial={{ height: 0 }}
                     animate={{ height: `${h}%` }}

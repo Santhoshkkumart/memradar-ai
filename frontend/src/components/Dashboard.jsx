@@ -53,7 +53,7 @@ export default function Dashboard() {
                   />
                   <div className="absolute -bottom-1 -right-1 bg-green w-4 h-4 rounded-full border-4 border-bg animate-pulse" />
                 </div>
-                
+
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="text-2xl font-black text-white tracking-tighter">
@@ -61,7 +61,7 @@ export default function Dashboard() {
                     </h2>
                     <span className="text-xs font-mono text-muted bg-white/5 px-2 py-0.5 rounded-md border border-white/10 uppercase tracking-widest">{selectedCoin.symbol}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-4">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-black font-mono text-white">
@@ -78,9 +78,25 @@ export default function Dashboard() {
                         {selectedCoin.change_24h ? `${selectedCoin.change_24h > 0 ? '+' : ''}${selectedCoin.change_24h.toFixed(1)}%` : '0.0%'}
                       </span>
                     </div>
-                    
+
                     <div className="h-4 w-px bg-white/10" />
-                    
+
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan/10 border border-cyan/20 text-[10px] font-black uppercase tracking-widest text-cyan">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" />
+                        Live WS
+                      </span>
+                      {Number.isFinite(selectedCoin.live_price_change_5m) && (
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest",
+                          selectedCoin.live_price_change_5m >= 0 ? 'text-green' : 'text-red'
+                        )}>
+                          {selectedCoin.live_price_change_5m >= 0 ? '+' : ''}
+                          {selectedCoin.live_price_change_5m.toFixed(1)}% / 5m
+                        </span>
+                      )}
+                    </div>
+
                     {hypeStage && (
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-black uppercase tracking-widest text-muted">Hype Status:</span>
@@ -133,10 +149,10 @@ export default function Dashboard() {
             <div className="pb-20">
               <AnimatePresence mode="wait">
                 {activeSection === 'overview' && (
-                  <motion.div 
-                    key="overview" 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
+                  <motion.div
+                    key="overview"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, ease: "circOut" }}
                     className="space-y-6"
@@ -158,10 +174,10 @@ export default function Dashboard() {
                 )}
 
                 {activeSection === 'analysis' && (
-                  <motion.div 
-                    key="analysis" 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
+                  <motion.div
+                    key="analysis"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, ease: "circOut" }}
                     className="space-y-6"
@@ -178,10 +194,10 @@ export default function Dashboard() {
                 )}
 
                 {activeSection === 'social' && (
-                  <motion.div 
-                    key="social" 
-                    initial={{ opacity: 0, y: 20 }} 
-                    animate={{ opacity: 1, y: 0 }} 
+                  <motion.div
+                    key="social"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.4, ease: "circOut" }}
                   >

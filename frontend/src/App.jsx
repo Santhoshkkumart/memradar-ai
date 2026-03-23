@@ -7,18 +7,17 @@ import TickerTape from './components/TickerTape';
 import useCoins from './hooks/useCoins';
 import useSentiment from './hooks/useSentiment';
 import useAlerts from './hooks/useAlerts';
+import useLivePrices from './hooks/useLivePrices';
 import useMemeStore from './store/useMemeStore';
 import FlowField from './components/ui/FlowField';
-import { UpgradeBanner } from './components/ui/UpgradeBanner';
-import { cn } from '@/lib/utils';
 
 export default function App() {
   useCoins();
   useSentiment();
   useAlerts();
+  useLivePrices();
 
   const { activeTab: storeActiveTab, setActiveTab } = useMemeStore();
-  const [showUpgrade, setShowUpgrade] = useState(true);
   const [viewTab, setViewTab] = useState(storeActiveTab || 'dashboard');
 
   const activeTab = viewTab || storeActiveTab;
@@ -41,18 +40,7 @@ export default function App() {
         />
         
         <div className="flex-grow flex flex-col w-full">
-          {showUpgrade && (
-            <div className="pt-20 px-4">
-              <UpgradeBanner 
-                buttonText="Demo Mode Ready"
-                description="for judge walkthrough and local fallback"
-                onClose={() => setShowUpgrade(false)}
-                onClick={() => setViewTab('dashboard')}
-              />
-            </div>
-          )}
-
-          <main className={cn("flex-grow pb-16 px-4 max-w-[1600px] mx-auto w-full", !showUpgrade && "pt-14")}>
+          <main className="flex-grow pb-16 px-4 max-w-[1600px] mx-auto w-full pt-14">
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'replay' && <HypeReplay />}
             {activeTab === 'compare' && <CoinCompare />}

@@ -6,6 +6,7 @@ import { getMoonshotProbability, getStageLabel, getStageColor, getDirectionColor
 import { cn } from '@/lib/utils';
 import { AnimatedShinyButton } from './ui/AnimatedShinyButton';
 import { TextShimmer } from './ui/TextShimmer';
+import { searchDexScreenerPairs } from '../api/client';
 
 // Enhanced comparison data for demo
 const COMPARE_DATA = {
@@ -27,9 +28,68 @@ export default function CoinCompare() {
   const coinOptions = Object.entries(COMPARE_DATA);
   const [leftId, setLeftId] = useState(coinOptions[0]?.[0] || '');
   const [rightId, setRightId] = useState(coinOptions[2]?.[0] || '');
+  const [leftMarket, setLeftMarket] = useState(null);
+  const [rightMarket, setRightMarket] = useState(null);
 
   const left = COMPARE_DATA[leftId];
   const right = COMPARE_DATA[rightId];
+
+  useEffect(() => {
+    let active = true;
+
+    function pickBestPair(results, coin) {
+      const list = Array.isArray(results) ? results : [];
+      if (list.length === 0) return null;
+
+      const symbol = String(coin?.symbol || '').toUpperCase();
+      const name = String(coin?.name || '').toLowerCase();
+
+      const scored = list.map((pair) => {
+        const baseSymbol = String(pair?.baseToken?.symbol || '').toUpperCase();
+        const baseName = String(pair?.baseToken?.name || '').toLowerCase();
+        const exactMatch = baseSymbol === symbol || baseSymbol === name.toUpperCase() || baseName === name;
+        const liquidity = Number(pair?.liquidity?.usd || 0);
+
+        return { pair, exactMatch, liquidity };
+      });
+
+      const exact = scored
+        .filter((entry) => entry.exactMatch)
+        .sort((a, b) => b.liquidity - a.liquidity)[0]?.pair;
+
+      if (exact) {
+        return exact;
+      }
+
+      return scored.sort((a, b) => b.liquidity - a.liquidity)[0]?.pair || list[0] || null;
+    }
+
+    async function loadMarketData() {
+      if (!left || !right) return;
+
+      try {
+        const [leftResult, rightResult] = await Promise.all([
+          searchDexScreenerPairs(left.symbol || left.name),
+          searchDexScreenerPairs(right.symbol || right.name),
+        ]);
+
+        if (!active) return;
+
+        setLeftMarket(pickBestPair(leftResult.results, left));
+        setRightMarket(pickBestPair(rightResult.results, right));
+      } catch {
+        if (!active) return;
+        setLeftMarket(null);
+        setRightMarket(null);
+      }
+    }
+
+    loadMarketData();
+
+    return () => {
+      active = false;
+    };
+  }, [leftId, rightId]);
 
   if (!left || !right) return null;
 
@@ -89,9 +149,9 @@ export default function CoinCompare() {
       {/* Side-by-side cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { data: left, side: 'left', color: 'cyan', gradient: 'from-cyan/20' },
-          { data: right, side: 'right', color: 'purple', gradient: 'from-purple/20' }
-        ].map(({ data, side, color, gradient }) => (
+          { data: left, market: leftMarket, side: 'left', color: 'cyan', gradient: 'from-cyan/20' },
+          { data: right, market: rightMarket, side: 'right', color: 'purple', gradient: 'from-purple/20' }
+        ].map(({ data, market, side, color, gradient }) => (
           <motion.div
             key={side}
             initial={{ opacity: 0, x: side === 'left' ? -30 : 30 }}
@@ -155,6 +215,30 @@ export default function CoinCompare() {
                   </span>
                 </div>
               </div>
+
+              {market && (
+                <div className="p-4 rounded-2xl bg-cyan/5 border border-cyan/10">
+                  <p className="text-[10px] text-cyan font-black uppercase tracking-widest mb-2">DEXScreener Snapshot</p>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <div className="text-muted uppercase font-bold mb-1">Chain</div>
+                      <div className="text-white font-black">{market.chainId || 'unknown'}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted uppercase font-bold mb-1">DEX</div>
+                      <div className="text-white font-black">{market.dexId || 'unknown'}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted uppercase font-bold mb-1">Liquidity</div>
+                      <div className="text-white font-black">${Math.round(market.liquidity?.usd || 0).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted uppercase font-bold mb-1">FDV</div>
+                      <div className="text-white font-black">${Math.round(market.fdv || 0).toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <AnimatedShinyButton className="w-full h-12 rounded-2xl">

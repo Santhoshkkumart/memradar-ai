@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { extractJsonPayload, withRetry } = require('./safety');
 
 async function analyzeWithGroq(systemPrompt, userMessage) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -6,29 +7,31 @@ async function analyzeWithGroq(systemPrompt, userMessage) {
     throw new Error('Groq API key not configured');
   }
 
-  const response = await axios.post(
-    'https://api.groq.com/openai/v1/chat/completions',
-    {
-      model: 'llama3-8b-8192',
-      max_tokens: 1000,
-      temperature: 0.3,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage }
-      ]
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+  const response = await withRetry(
+    () => axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.1-8b-instant',
+        max_completion_tokens: 1000,
+        temperature: 0.3,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage }
+        ]
       },
-      timeout: 8000
-    }
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 8000
+      }
+    ),
+    { retries: 1, delayMs: 300, label: 'Groq request' }
   );
 
-  let content = response.data.choices[0].message.content;
-  content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-  return JSON.parse(content);
+  const content = response.data?.choices?.[0]?.message?.content;
+  return extractJsonPayload(content);
 }
 
 module.exports = { analyzeWithGroq };

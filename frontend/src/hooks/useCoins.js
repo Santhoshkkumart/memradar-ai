@@ -12,7 +12,7 @@ const DEMO_COINS = [
 ];
 
 export default function useCoins() {
-  const { setCoins, setFearGreed, setLoading, setError, clearError, selectCoin, selectedCoin, setSelectedCoin, sentiment, hypeStage, velocity } = useMemeStore();
+  const { setCoins, setFearGreed, setLoading, setError, clearError, selectCoin, selectedCoin, selectedCoinId, setSelectedCoin, sentiment, hypeStage, velocity } = useMemeStore();
   const intervalRef = useRef(null);
   const fearIntervalRef = useRef(null);
   const selectedCoinRef = useRef(selectedCoin);
@@ -42,13 +42,17 @@ export default function useCoins() {
         // Auto-select first coin
         const currentSelected = selectedCoinRef.current;
 
+        const persistedSelected = selectedCoinId ? enriched.find(coin => coin.id === selectedCoinId) : null;
+
         if (!currentSelected && enriched.length > 0) {
-          selectCoin(enriched[0]);
+          selectCoin(persistedSelected || enriched[0]);
         } else if (currentSelected && enriched.length > 0) {
           const updatedSelected = enriched.find(coin => coin.id === currentSelected.id);
           if (updatedSelected) {
             setSelectedCoin(updatedSelected);
           }
+        } else if (persistedSelected) {
+          setSelectedCoin(persistedSelected);
         }
       } catch (err) {
         const fallback = DEMO_COINS.map(coin => ({
@@ -61,8 +65,12 @@ export default function useCoins() {
         })).sort((a, b) => b.hypeScore - a.hypeScore);
 
         setCoins(fallback);
+        const persistedSelected = selectedCoinId ? fallback.find(coin => coin.id === selectedCoinId) : null;
+
         if (!selectedCoinRef.current && fallback.length > 0) {
-          selectCoin(fallback[0]);
+          selectCoin(persistedSelected || fallback[0]);
+        } else if (persistedSelected) {
+          setSelectedCoin(persistedSelected);
         }
         setError('coins', 'Backend unavailable, using demo data');
       } finally {
@@ -76,7 +84,7 @@ export default function useCoins() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [selectCoin, setSelectedCoin, setCoins, setLoading, setError, clearError]);
+  }, [selectedCoinId, selectCoin, setSelectedCoin, setCoins, setLoading, setError, clearError]);
 
   // Update hype scores when sentiment/velocity data changes for selected coin
   useEffect(() => {
@@ -98,7 +106,7 @@ export default function useCoins() {
       }
       return coin;
     }));
-  }, [sentiment, velocity, hypeStage, selectedCoin, setCoins]);
+  }, [sentiment, velocity, hypeStage, selectedCoin?.id, setCoins]);
 
   useEffect(() => {
     async function loadFearGreed() {

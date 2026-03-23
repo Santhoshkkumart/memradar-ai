@@ -2,12 +2,12 @@ import { useEffect, useRef, useCallback } from 'react';
 import useMemeStore from '../store/useMemeStore';
 
 export default function useAlerts() {
-  const { alerts, soundEnabled, selectedCoin } = useMemeStore();
+  const { alerts, soundEnabled, notificationsMuted } = useMemeStore();
   const prevAlertCount = useRef(alerts.length);
   const audioCtxRef = useRef(null);
 
   const playAlertSound = useCallback(() => {
-    if (!soundEnabled) return;
+    if (!soundEnabled || notificationsMuted) return;
     try {
       if (!audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -36,7 +36,7 @@ export default function useAlerts() {
     } catch (e) {
       // Audio not supported or blocked
     }
-  }, [soundEnabled]);
+  }, [notificationsMuted, soundEnabled]);
 
   useEffect(() => {
     if (alerts.length > prevAlertCount.current) {

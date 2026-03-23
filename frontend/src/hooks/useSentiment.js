@@ -1,31 +1,31 @@
 import { useEffect, useRef } from 'react';
 import useMemeStore from '../store/useMemeStore';
-import { fetchRedditPosts, analyzeSentiment, classifyHypeStage, getPrediction, generateAlert } from '../api/client';
+import { fetchSocialPosts, analyzeSentiment, classifyHypeStage, getPrediction, generateAlert } from '../api/client';
 
 const DEMO_PIPELINE = {
   floki: {
     posts: [
-      { title: 'FLOKI partnership with major DeFi protocol just dropped', score: 892, num_comments: 156, created_utc: Math.floor(Date.now() / 1000) - 1800, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'FLOKI whale wallet accumulated 2.3B tokens', score: 567, num_comments: 89, created_utc: Math.floor(Date.now() / 1000) - 3600, subreddit: 'SatoshiStreetBets', url: '#' },
-      { title: 'FLOKI technical setup looks bullish', score: 345, num_comments: 67, created_utc: Math.floor(Date.now() / 1000) - 5400, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'FLOKI could be the next 100x', score: 234, num_comments: 45, created_utc: Math.floor(Date.now() / 1000) - 7200, subreddit: 'memecoins', url: '#' },
-      { title: 'FLOKI mentioned by top crypto influencer', score: 178, num_comments: 34, created_utc: Math.floor(Date.now() / 1000) - 14400, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'Just aped into FLOKI', score: 89, num_comments: 23, created_utc: Math.floor(Date.now() / 1000) - 18000, subreddit: 'dogecoin', url: '#' },
+      { title: 'FLOKI partnership with major DeFi protocol just dropped', score: 892, source: 'CoinDesk', published_at: new Date(Date.now() - 1800000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'FLOKI whale wallet accumulated 2.3B tokens', score: 567, source: 'Decrypt', published_at: new Date(Date.now() - 3600000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'FLOKI technical setup looks bullish', score: 345, source: 'CryptoSlate', published_at: new Date(Date.now() - 5400000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'FLOKI could be the next 100x', score: 234, source: 'The Block', published_at: new Date(Date.now() - 7200000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'FLOKI mentioned by top crypto influencer', score: 178, source: 'BeInCrypto', published_at: new Date(Date.now() - 14400000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Just aped into FLOKI', score: 89, source: 'CoinDesk', published_at: new Date(Date.now() - 18000000).toISOString(), sentiment: 'neutral', url: '#' },
     ],
     velocity: { recent_count: 4, previous_count: 2, velocity_ratio: 2 },
     sentiment: { coin: 'FLOKI', sentiment_score: 91, primary_emotion: 'hype', confidence: 87, themes: ['partnership announcement', 'whale accumulation', 'breakout pattern'], coordinated_flag: false, summary: 'FLOKI is experiencing a surge of organic enthusiasm.' },
     stage: { coin: 'FLOKI', hype_stage: 'early_whisper', stage_confidence: 89, velocity_trend: 'accelerating', estimated_hours_in_stage: 8, signal: 'Sharp mention spike in niche crypto communities.' },
     prediction: { coin: 'FLOKI', direction: 'bullish', confidence: 89, time_window: '24-48 hours', catalyst: 'Partnership announcement and influencer attention', key_signals: ['601% mention spike', 'Sentiment score 91', 'Early Whisper classification'], risk_factors: ['Partnership details may disappoint', 'Marketwide downturn'], prediction_summary: 'FLOKI shows the strongest social signal convergence in 72 hours.' },
-    alert: { coin: 'FLOKI', alert_level: 'critical', headline: 'FLOKI - Strongest social signal in 72 hours', body: 'Mention velocity spiked in a tight window while sentiment remained elevated. Organic community expansion continues across multiple crypto subreddits.', emoji: '🚨', timestamp: Date.now(), is_critical: true },
+    alert: { coin: 'FLOKI', alert_level: 'critical', headline: 'FLOKI - Strongest social signal in 72 hours', body: 'Mention velocity spiked in a tight window while sentiment remained elevated. Organic community expansion continues across multiple crypto news sources.', emoji: '🚨', timestamp: Date.now(), is_critical: true },
   },
   pepe: {
     posts: [
-      { title: 'PEPE volume up 400% in 24 hours', score: 1245, num_comments: 234, created_utc: Math.floor(Date.now() / 1000) - 2400, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'Elon liked a PEPE meme tweet', score: 2100, num_comments: 456, created_utc: Math.floor(Date.now() / 1000) - 4800, subreddit: 'SatoshiStreetBets', url: '#' },
-      { title: 'PEPE ecosystem expanding', score: 567, num_comments: 89, created_utc: Math.floor(Date.now() / 1000) - 7200, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'Weekly PEPE discussion', score: 234, num_comments: 156, created_utc: Math.floor(Date.now() / 1000) - 10800, subreddit: 'memecoins', url: '#' },
-      { title: 'PEPE might be overbought short-term', score: 45, num_comments: 67, created_utc: Math.floor(Date.now() / 1000) - 16200, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'Just sold 50% of my PEPE bag', score: 123, num_comments: 45, created_utc: Math.floor(Date.now() / 1000) - 21600, subreddit: 'SatoshiStreetBets', url: '#' },
+      { title: 'PEPE volume up 400% in 24 hours', score: 1245, source: 'CoinDesk', published_at: new Date(Date.now() - 2400000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Elon liked a PEPE meme tweet', score: 2100, source: 'Decrypt', published_at: new Date(Date.now() - 4800000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'PEPE ecosystem expanding', score: 567, source: 'CryptoSlate', published_at: new Date(Date.now() - 7200000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Weekly PEPE discussion', score: 234, source: 'The Block', published_at: new Date(Date.now() - 10800000).toISOString(), sentiment: 'neutral', url: '#' },
+      { title: 'PEPE might be overbought short-term', score: 45, source: 'BeInCrypto', published_at: new Date(Date.now() - 16200000).toISOString(), sentiment: 'bearish', url: '#' },
+      { title: 'Just sold 50% of my PEPE bag', score: 123, source: 'CoinDesk', published_at: new Date(Date.now() - 21600000).toISOString(), sentiment: 'bearish', url: '#' },
     ],
     velocity: { recent_count: 4, previous_count: 2, velocity_ratio: 2 },
     sentiment: { coin: 'PEPE', sentiment_score: 78, primary_emotion: 'FOMO', confidence: 82, themes: ['Elon engagement', 'volume explosion', 'exchange listings'], coordinated_flag: false, summary: 'PEPE sentiment is strongly bullish.' },
@@ -35,12 +35,12 @@ const DEMO_PIPELINE = {
   },
   doge: {
     posts: [
-      { title: 'DOGE integration with X payments confirmed by insider source', score: 3456, num_comments: 567, created_utc: Math.floor(Date.now() / 1000) - 3600, subreddit: 'dogecoin', url: '#' },
-      { title: 'Dogecoin transaction volume hits 6-month high', score: 892, num_comments: 123, created_utc: Math.floor(Date.now() / 1000) - 7200, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'DOGE to $1? Updated price model', score: 456, num_comments: 89, created_utc: Math.floor(Date.now() / 1000) - 10800, subreddit: 'SatoshiStreetBets', url: '#' },
-      { title: 'Community update: Dogecoin Foundation progress report', score: 234, num_comments: 45, created_utc: Math.floor(Date.now() / 1000) - 14400, subreddit: 'dogecoin', url: '#' },
-      { title: 'I converted all my DOGE to BTC', score: 67, num_comments: 234, created_utc: Math.floor(Date.now() / 1000) - 18000, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'Do Only Good Everyday - my DOGE coffee shop now accepts it', score: 345, num_comments: 56, created_utc: Math.floor(Date.now() / 1000) - 21600, subreddit: 'dogecoin', url: '#' },
+      { title: 'DOGE integration with X payments confirmed by insider source', score: 3456, source: 'CoinDesk', published_at: new Date(Date.now() - 3600000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Dogecoin transaction volume hits 6-month high', score: 892, source: 'CryptoSlate', published_at: new Date(Date.now() - 7200000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'DOGE to $1? Updated price model', score: 456, source: 'Decrypt', published_at: new Date(Date.now() - 10800000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Community update: Dogecoin Foundation progress report', score: 234, source: 'The Block', published_at: new Date(Date.now() - 14400000).toISOString(), sentiment: 'neutral', url: '#' },
+      { title: 'I converted all my DOGE to BTC', score: 67, source: 'BeInCrypto', published_at: new Date(Date.now() - 18000000).toISOString(), sentiment: 'bearish', url: '#' },
+      { title: 'Do Only Good Everyday - my DOGE coffee shop now accepts it', score: 345, source: 'CoinDesk', published_at: new Date(Date.now() - 21600000).toISOString(), sentiment: 'bullish', url: '#' },
     ],
     velocity: { recent_count: 3, previous_count: 2, velocity_ratio: 1.5 },
     sentiment: { coin: 'DOGE', sentiment_score: 72, primary_emotion: 'belief', confidence: 79, themes: ['X payments integration', 'adoption growth', 'institutional interest'], coordinated_flag: false, summary: 'Dogecoin community shows strong conviction.' },
@@ -50,12 +50,12 @@ const DEMO_PIPELINE = {
   },
   shib: {
     posts: [
-      { title: 'Shibarium L2 hitting record transaction counts', score: 678, num_comments: 89, created_utc: Math.floor(Date.now() / 1000) - 4200, subreddit: 'shib', url: '#' },
-      { title: 'SHIB burn rate spikes 1000% in last 24 hours', score: 456, num_comments: 67, created_utc: Math.floor(Date.now() / 1000) - 8400, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'SHIB metaverse update - first gameplay footage leaked', score: 234, num_comments: 45, created_utc: Math.floor(Date.now() / 1000) - 12600, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'Is SHIB dead? Honest analysis', score: 89, num_comments: 123, created_utc: Math.floor(Date.now() / 1000) - 16800, subreddit: 'memecoins', url: '#' },
-      { title: 'SHIB ecosystem token BONE pumping', score: 345, num_comments: 56, created_utc: Math.floor(Date.now() / 1000) - 19200, subreddit: 'SatoshiStreetBets', url: '#' },
-      { title: 'Weekly SHIB thread - patience is a virtue', score: 123, num_comments: 34, created_utc: Math.floor(Date.now() / 1000) - 23400, subreddit: 'shib', url: '#' },
+      { title: 'Shibarium L2 hitting record transaction counts', score: 678, source: 'CoinDesk', published_at: new Date(Date.now() - 4200000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'SHIB burn rate spikes 1000% in last 24 hours', score: 456, source: 'Decrypt', published_at: new Date(Date.now() - 8400000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'SHIB metaverse update - first gameplay footage leaked', score: 234, source: 'CryptoSlate', published_at: new Date(Date.now() - 12600000).toISOString(), sentiment: 'neutral', url: '#' },
+      { title: 'Is SHIB dead? Honest analysis', score: 89, source: 'The Block', published_at: new Date(Date.now() - 16800000).toISOString(), sentiment: 'bearish', url: '#' },
+      { title: 'SHIB ecosystem token BONE pumping', score: 345, source: 'BeInCrypto', published_at: new Date(Date.now() - 19200000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Weekly SHIB thread - patience is a virtue', score: 123, source: 'CoinDesk', published_at: new Date(Date.now() - 23400000).toISOString(), sentiment: 'neutral', url: '#' },
     ],
     velocity: { recent_count: 2, previous_count: 3, velocity_ratio: 0.67 },
     sentiment: { coin: 'SHIB', sentiment_score: 45, primary_emotion: 'speculation', confidence: 64, themes: ['Shibarium growth', 'burn rate increase', 'ecosystem expansion'], coordinated_flag: false, summary: 'SHIB sentiment is cautiously optimistic.' },
@@ -65,12 +65,12 @@ const DEMO_PIPELINE = {
   },
   bonk: {
     posts: [
-      { title: 'BONK just flipped MYRO as #1 Solana memecoin', score: 567, num_comments: 89, created_utc: Math.floor(Date.now() / 1000) - 3000, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'Solana memecoin season 2.0 - BONK leading the charge', score: 345, num_comments: 67, created_utc: Math.floor(Date.now() / 1000) - 6000, subreddit: 'SatoshiStreetBets', url: '#' },
-      { title: 'BONKbot volume exceeds $100M in 24hrs', score: 234, num_comments: 45, created_utc: Math.floor(Date.now() / 1000) - 9000, subreddit: 'CryptoCurrency', url: '#' },
-      { title: 'New BONK NFT collection selling out in minutes', score: 178, num_comments: 34, created_utc: Math.floor(Date.now() / 1000) - 12000, subreddit: 'memecoins', url: '#' },
-      { title: 'BONK price prediction: conservative target', score: 89, num_comments: 23, created_utc: Math.floor(Date.now() / 1000) - 18000, subreddit: 'CryptoMoonShots', url: '#' },
-      { title: 'Took profits on BONK too early', score: 56, num_comments: 12, created_utc: Math.floor(Date.now() / 1000) - 21600, subreddit: 'SatoshiStreetBets', url: '#' },
+      { title: 'BONK just flipped MYRO as #1 Solana memecoin', score: 567, source: 'CoinDesk', published_at: new Date(Date.now() - 3000000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Solana memecoin season 2.0 - BONK leading the charge', score: 345, source: 'Decrypt', published_at: new Date(Date.now() - 6000000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'BONKbot volume exceeds $100M in 24hrs', score: 234, source: 'CryptoSlate', published_at: new Date(Date.now() - 9000000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'New BONK NFT collection selling out in minutes', score: 178, source: 'The Block', published_at: new Date(Date.now() - 12000000).toISOString(), sentiment: 'neutral', url: '#' },
+      { title: 'BONK price prediction: conservative target', score: 89, source: 'BeInCrypto', published_at: new Date(Date.now() - 18000000).toISOString(), sentiment: 'bullish', url: '#' },
+      { title: 'Took profits on BONK too early', score: 56, source: 'CoinDesk', published_at: new Date(Date.now() - 21600000).toISOString(), sentiment: 'bearish', url: '#' },
     ],
     velocity: { recent_count: 4, previous_count: 1, velocity_ratio: 4 },
     sentiment: { coin: 'BONK', sentiment_score: 85, primary_emotion: 'hype', confidence: 76, themes: ['Solana memecoin leader', 'trading volume surge', 'NFT collection'], coordinated_flag: false, summary: 'BONK is riding high on Solana ecosystem momentum.' },
@@ -86,9 +86,28 @@ function getDemoData(coinName) {
 }
 
 export default function useSentiment() {
-  const { selectedCoin, setPosts, setVelocity, setSentiment, setHypeStage, setPrediction, addAlert, setLoading, setError, clearError } = useMemeStore();
+  const { selectedCoin, socialSource, setPosts, setVelocity, setSocial, setSentiment, setHypeStage, setPrediction, addAlert, setLoading, setError, clearError, setScanSummary } = useMemeStore();
   const intervalRef = useRef(null);
   const alertedCoins = useRef(new Set());
+  const lastRunRef = useRef(new Map());
+
+  const shouldSkipRun = (sourceName, coinName, posts) => {
+    const now = Date.now();
+    const signature = JSON.stringify({
+      source: sourceName,
+      name: coinName,
+      titles: (posts || []).slice(0, 5).map((post) => post.title),
+    });
+    const cacheKey = `${sourceName}:${coinName}`;
+    const previous = lastRunRef.current.get(cacheKey);
+
+    if (previous && previous.signature === signature && now - previous.at < 5 * 60 * 1000) {
+      return true;
+    }
+
+    lastRunRef.current.set(cacheKey, { signature, at: now });
+    return false;
+  };
 
   useEffect(() => {
     if (!selectedCoin) return;
@@ -101,28 +120,37 @@ export default function useSentiment() {
       setLoading('prediction', true);
 
       try {
-        // Step 1: Fetch Reddit posts
-        const redditData = await fetchRedditPosts(coinName);
-        setPosts(redditData.posts);
-        setVelocity(redditData.velocity);
+        const socialData = await fetchSocialPosts(socialSource, coinName);
+        if (socialData.social) {
+          setSocial(socialData.social);
+        }
+        if (shouldSkipRun(socialSource, coinName, socialData.posts)) {
+          setPosts(socialData.posts);
+          setVelocity(socialData.velocity);
+          setScanSummary({ at: Date.now(), count: socialData.posts.length });
+          setLoading('posts', false);
+          setLoading('sentiment', false);
+          setLoading('prediction', false);
+          return;
+        }
+
+        setPosts(socialData.posts);
+        setVelocity(socialData.velocity);
+        setScanSummary({ at: Date.now(), count: socialData.posts.length });
         setLoading('posts', false);
 
-        // Step 2: Analyze sentiment
-        const sentimentData = await analyzeSentiment(coinName, redditData.posts);
+        const sentimentData = await analyzeSentiment(coinName, socialData.posts);
         setSentiment(sentimentData);
 
-        // Step 3: Classify hype stage
-        const stageData = await classifyHypeStage(coinName, sentimentData, redditData.velocity);
+        const stageData = await classifyHypeStage(coinName, sentimentData, socialData.velocity);
         setHypeStage(stageData);
         setLoading('sentiment', false);
 
-        // Step 4: Get prediction
-        const predictionData = await getPrediction(coinName, sentimentData, redditData.velocity, stageData);
+        const predictionData = await getPrediction(coinName, sentimentData, socialData.velocity, stageData);
         setPrediction(predictionData);
         setLoading('prediction', false);
 
-        // Step 5: Check alert thresholds
-        const vel = redditData.velocity?.velocity_ratio || 0;
+        const vel = socialData.velocity?.velocity_ratio || 0;
         const sent = sentimentData?.sentiment_score || 0;
         const stage = stageData?.hype_stage || '';
 
@@ -134,13 +162,13 @@ export default function useSentiment() {
               alertedCoins.current.add(coinName);
             }
           } catch (e) {
-            // Alert generation is non-critical
           }
         }
       } catch (err) {
         const demo = getDemoData(coinName);
         setPosts(demo.posts);
         setVelocity(demo.velocity);
+        setScanSummary({ at: Date.now(), count: demo.posts.length });
         setSentiment(demo.sentiment);
         setHypeStage(demo.stage);
         setPrediction(demo.prediction);
@@ -159,11 +187,10 @@ export default function useSentiment() {
 
     runPipeline();
 
-    // Polling every 90 seconds
-    intervalRef.current = setInterval(runPipeline, 90000);
+    intervalRef.current = setInterval(runPipeline, 30000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [selectedCoin]);
+  }, [selectedCoin?.id, socialSource]);
 }

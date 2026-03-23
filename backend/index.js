@@ -7,6 +7,7 @@ require('dotenv').config({
 
 const express = require('express');
 const cors = require('cors');
+const { isDemoMode, getConfiguredProviders, getMissingProductionSecrets } = require('./services/runtime');
 
 const app = express();
 
@@ -24,15 +25,22 @@ app.use(express.json());
 
 // Routes
 app.use('/api/coins', require('./routes/coins'));
-app.use('/api/reddit', require('./routes/reddit'));
+app.use('/api/social', require('./routes/social'));
+app.use('/api/youtube', require('./routes/youtube'));
 app.use('/api/sentiment', require('./routes/sentiment'));
 app.use('/api/predict', require('./routes/predict'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/fear-greed', require('./routes/fearGreed'));
+app.use('/api/dexscreener', require('./routes/dexscreener'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+  res.json({
+    status: 'ok',
+    timestamp: Date.now(),
+    demo_mode: isDemoMode(),
+    providers: getConfiguredProviders(),
+  });
 });
 
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
@@ -59,4 +67,12 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`MemeRadar backend running on port ${PORT}`);
+
+  if (!isDemoMode()) {
+    const missing = getMissingProductionSecrets();
+    if (missing.length > 0) {
+      console.warn('[Startup] Missing production env vars:', missing.join(', '));
+      console.warn('[Startup] The app will still run, but missing services will fall back to mock data.');
+    }
+  }
 });

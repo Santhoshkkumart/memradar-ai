@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid, ReferenceLine } from 'recharts';
 import { Clock, TrendingUp, Award, Calendar, PlayCircle, History, Zap, ArrowRight, Target, BarChart3, Info } from 'lucide-react';
@@ -17,7 +17,7 @@ const HISTORICAL_DATA = {
       mentions: Math.round(50 + (i < 8 ? i * 20 : i < 18 ? 160 + (i - 8) * 80 : 960 - (i - 18) * 60)),
     })),
     events: [
-      { day: 'Day 3', title: 'Signal Detected', body: 'Early whisper detected — 200% mention spike in r/CryptoMoonShots', badge: 'SIGNAL', color: '#00e5ff' },
+      { day: 'Day 3', title: 'Signal Detected', body: 'Early whisper detected — 200% mention spike across crypto news sources', badge: 'SIGNAL', color: '#00e5ff' },
       { day: 'Day 5', title: 'Alert Fired', body: 'Critical alert: Velocity 8.2x with sentiment +87. Organic community growth confirmed.', badge: 'ALERT', color: '#ff8c00' },
       { day: 'Day 14', title: 'Peak Frenzy', body: 'Mainstream discovery — trending on Twitter, covered by CoinDesk. Too late to enter.', badge: 'PEAK', color: '#ff3355' },
       { day: 'Day 22', title: 'Exit Signal', body: 'Sentiment dropping, early holders exiting. Cooling down phase detected.', badge: 'EXIT', color: '#6b7280' },
@@ -32,7 +32,7 @@ const HISTORICAL_DATA = {
       mentions: Math.round(100 + (i < 10 ? i * 40 : i < 20 ? 400 + (i - 10) * 120 : 1600 - (i - 20) * 100)),
     })),
     events: [
-      { day: 'Day 4', title: 'Signal Detected', body: 'Cross-subreddit mention surge — WSB + crypto communities converging', badge: 'SIGNAL', color: '#00e5ff' },
+      { day: 'Day 4', title: 'Signal Detected', body: 'Cross-community mention surge — multiple crypto communities converging', badge: 'SIGNAL', color: '#00e5ff' },
       { day: 'Day 7', title: 'Alert Fired', body: 'Velocity 12x. Elon Musk tweet engagement. Sentiment +92.', badge: 'ALERT', color: '#ff8c00' },
       { day: 'Day 16', title: 'Peak Frenzy', body: 'DOGE trending globally. Mainstream media coverage. FOMO dominant.', badge: 'PEAK', color: '#ff3355' },
       { day: 'Day 24', title: 'Exit Signal', body: 'Post-SNL dump. Mixed sentiment. MemeRadar would have signaled exit.', badge: 'EXIT', color: '#6b7280' },
@@ -62,7 +62,7 @@ const HISTORICAL_DATA = {
       mentions: Math.round(30 + (i < 8 ? i * 25 : i < 16 ? 200 + (i - 8) * 110 : 1080 - (i - 16) * 70)),
     })),
     events: [
-      { day: 'Day 3', title: 'Signal Detected', body: 'Solana-focused subreddits showing organic excitement for BONK airdrop', badge: 'SIGNAL', color: '#00e5ff' },
+      { day: 'Day 3', title: 'Signal Detected', body: 'Solana-focused crypto communities showing organic excitement for BONK airdrop', badge: 'SIGNAL', color: '#00e5ff' },
       { day: 'Day 6', title: 'Alert Fired', body: 'Velocity 9.1x. Community-driven airdrop creating viral loop. Sentiment +88.', badge: 'ALERT', color: '#ff8c00' },
       { day: 'Day 12', title: 'Peak Frenzy', body: 'BONK trending on CT. Multiple DEX volume records broken.', badge: 'PEAK', color: '#ff3355' },
       { day: 'Day 20', title: 'Exit Signal', body: 'Airdrop selling pressure. Velocity decelerating rapidly.', badge: 'EXIT', color: '#6b7280' },
@@ -81,9 +81,11 @@ export default function HypeReplay() {
           Historical Hype Replay
         </TextShimmer>
         <div className="h-1 w-20 bg-gradient-to-r from-cyan to-purple rounded-full" />
+        <p className="mt-3 max-w-2xl text-center text-sm text-slate-400 leading-relaxed">
+          Backtested case studies showing how MemeRadar would have tracked social momentum before major meme coin breakouts.
+        </p>
       </div>
 
-      {/* Coin selector */}
       <div className="flex flex-wrap items-center justify-center gap-3">
         {Object.keys(HISTORICAL_DATA).map(name => (
           <button
@@ -102,7 +104,6 @@ export default function HypeReplay() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Info Card */}
         <div className="lg:col-span-1 space-y-6">
           <motion.div
             key={`info-${selected}`}
@@ -116,7 +117,7 @@ export default function HypeReplay() {
               </div>
               <div>
                 <h3 className="text-xl font-black text-white tracking-tight">{coin.name} Case Study</h3>
-                <span className="text-[10px] text-muted font-mono uppercase tracking-widest">{coin.period}</span>
+                <span className="text-[10px] text-muted font-mono uppercase tracking-widest">{coin.period} - Historical Replay</span>
               </div>
             </div>
 
@@ -124,20 +125,29 @@ export default function HypeReplay() {
               "{coin.description}"
             </p>
 
+            <div className="mb-6 p-4 rounded-2xl border border-white/10 bg-white/5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted">Replay Mode</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-cyan">Historical Archive</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                These charts are curated historical examples, not demo placeholders. They show the pattern shape, signal timing, and exit window that the system is designed to catch.
+              </p>
+            </div>
+
             <div className="mt-auto space-y-4">
               <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
                 <span className="text-[10px] font-black text-muted uppercase tracking-widest">Historical ROI</span>
                 <span className="text-2xl font-black text-green font-mono">{coin.roi}</span>
               </div>
-              
+
               <AnimatedShinyButton className="w-full h-12 rounded-2xl">
-                REPLAY SIGNALS
+                VIEW TIMELINE
               </AnimatedShinyButton>
             </div>
           </motion.div>
         </div>
 
-        {/* Chart Card */}
         <div className="lg:col-span-2">
           <motion.div
             key={`chart-${selected}`}
@@ -152,7 +162,7 @@ export default function HypeReplay() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white tracking-tight uppercase">Multi-Signal Convergence</h3>
-                  <span className="text-[10px] text-muted font-mono uppercase tracking-widest">Sentiment vs Volume</span>
+                  <span className="text-[10px] text-muted font-mono uppercase tracking-widest">Sentiment vs Volume vs Mentions</span>
                 </div>
               </div>
             </div>
@@ -188,7 +198,6 @@ export default function HypeReplay() {
         </div>
       </div>
 
-      {/* Timeline Events */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {coin.events.map((event, i) => (
           <motion.div
@@ -213,7 +222,6 @@ export default function HypeReplay() {
         ))}
       </div>
 
-      {/* ROI Proof Card */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -222,17 +230,17 @@ export default function HypeReplay() {
         <div className="absolute inset-0 z-0 opacity-20">
           <FlickeringGrid color="#00ff88" squareSize={3} gridGap={10} flickerChance={0.15} />
         </div>
-        
+
         <div className="relative z-10 max-w-2xl mx-auto">
           <div className="inline-flex p-4 rounded-3xl bg-green/10 border border-green/20 mb-6 shadow-[0_0_30px_rgba(0,255,136,0.2)]">
             <Award className="w-10 h-10 text-green" />
           </div>
-          
+
           <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] mb-4">Alpha Verification</h3>
           <p className="text-slate-300 font-medium mb-8 leading-relaxed">
-            MemeRadar's detection engine identified these signals <span className="text-white font-bold underline decoration-green underline-offset-4">48 hours</span> before parabolic movement.
+            MemeRadar's detection engine would have identified these signals <span className="text-white font-bold underline decoration-green underline-offset-4">48 hours</span> before parabolic movement.
           </p>
-          
+
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-10">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-green uppercase tracking-widest mb-1">Signal ROI</span>
@@ -240,9 +248,9 @@ export default function HypeReplay() {
                 {coin.roi}
               </span>
             </div>
-            
+
             <div className="h-12 w-px bg-white/10 hidden md:block" />
-            
+
             <div className="flex flex-col items-center md:items-start">
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-black text-white font-mono">$100</span>

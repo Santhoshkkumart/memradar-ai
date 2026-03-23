@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import useMemeStore from '../store/useMemeStore';
 import { getMoonshotProbability, getPatternMatch } from '../utils/hypeScore';
@@ -7,12 +7,25 @@ import { FlickeringGrid } from './ui/FlickeringGrid';
 import { cn } from '@/lib/utils';
 
 export default function MoonshotCard() {
-  const { sentiment, velocity, hypeStage, selectedCoin } = useMemeStore();
+  const { sentiment, velocity, hypeStage, selectedCoin, loading } = useMemeStore();
+  const lastValidProbRef = useRef(0);
 
-  const moonshotProb = getMoonshotProbability(sentiment, velocity, hypeStage);
+  const rawMoonshotProb = getMoonshotProbability(sentiment, velocity, hypeStage);
+  const moonshotProb = rawMoonshotProb > 0 ? rawMoonshotProb : lastValidProbRef.current;
   const pattern = getPatternMatch(hypeStage?.hype_stage, selectedCoin?.name);
   const circumference = 2 * Math.PI * 65;
   const offset = circumference - (moonshotProb / 100) * circumference;
+
+  useEffect(() => {
+    if (rawMoonshotProb > 0) {
+      lastValidProbRef.current = rawMoonshotProb;
+    }
+  }, [rawMoonshotProb]);
+
+  const isRefreshing = loading.posts || loading.sentiment || loading.prediction;
+  const displayValue = isRefreshing && rawMoonshotProb === 0 && lastValidProbRef.current > 0
+    ? `${lastValidProbRef.current}%`
+    : `${moonshotProb}%`;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-purple/30 p-6 h-full group"
@@ -75,7 +88,7 @@ export default function MoonshotCard() {
               className="text-center"
             >
               <span className="text-4xl font-black font-mono text-white tracking-tighter block leading-none">
-                {moonshotProb}%
+                {displayValue}
               </span>
               <span className="text-[10px] font-bold text-purple/80 uppercase tracking-widest mt-1 block">Alpha</span>
             </motion.div>
@@ -92,7 +105,7 @@ export default function MoonshotCard() {
           </div>
           
           <p className="text-sm text-slate-300 mb-4 leading-relaxed max-w-md">
-            Our AI detected a <span className="text-purple font-bold">{moonshotProb}% correlation</span> with historical viral pumps. 
+            Our AI detected a <span className="text-purple font-bold">{displayValue} correlation</span> with historical viral pumps. 
             High probability of significant upward movement within 48 hours.
           </p>
 

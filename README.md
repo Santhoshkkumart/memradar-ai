@@ -1,87 +1,91 @@
-# MemeRadar AI 🎯
+# MemeRadar
 
-Real-time meme coin trend prediction powered by social intelligence and AI.
+Real-time meme coin trend prediction powered by social signals and AI.
 
-> **Detect coins in "Early Whisper" stage before mainstream attention.**
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - npm 9+
 
-### Installation
+### Install
 
 ```bash
-# Navigate to project
 cd memeradar
-
-# Install backend
-cd backend
-npm install
-
-# Install frontend
-cd ../frontend
-npm install
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-### Running
+### Run
 
 ```bash
-# Terminal 1 — Backend
+# Terminal 1
 cd backend && npm run dev
 
-# Terminal 2 — Frontend
+# Terminal 2
 cd frontend && npm run dev
-
-# Open: http://localhost:5173
 ```
 
-### Demo Mode (No API keys needed)
-The app runs with **realistic mock data** by default when no API keys are configured. Set `DEMO_MODE=true` in `.env.example` for guaranteed mock data.
+Open `http://localhost:5173`.
 
-### Production Setup
-For live Reddit, CoinGecko, and AI data, copy `.env.example` to `backend/.env` and set:
+## Demo Mode
+
+Set `DEMO_MODE=true` for mock data only. Set `DEMO_MODE=false` to use live providers where keys are available.
+
+## Production Setup
+
+Edit `backend/.env` and set:
 - `GROQ_API_KEY`
 - `GEMINI_API_KEY`
 - `REDDIT_CLIENT_ID`
 - `REDDIT_SECRET`
-- `CORS_ORIGIN` to your frontend URL
+- `YOUTUBE_API_KEY`
+- `CORS_ORIGIN`
 
-If the frontend is hosted separately, set `VITE_API_BASE_URL` to the backend URL. If both are served from the same backend, leave it blank.
+If the frontend is hosted separately, set `VITE_API_BASE_URL` in your build or deployment environment to the backend URL.
 
-Keep `DEMO_MODE=false` for production so the backend uses live APIs and only falls back to mock data when a service fails.
+## Deployment
 
-### Getting API Keys (Optional — for live data)
+The repo now includes a root `Dockerfile` that:
+- builds the React frontend
+- installs backend dependencies
+- serves the built UI from the Express backend
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| **Groq** | [console.groq.com](https://console.groq.com) | Free — Create account → API Keys |
-| **Gemini** | [aistudio.google.com](https://aistudio.google.com) | Free — Get API Key |
-| **Reddit** | [reddit.com/prefs/apps](https://reddit.com/prefs/apps) | Create App → Script type; use the client ID and secret in `backend/.env` |
+Build and run it with:
 
-Copy `.env.example` to `backend/.env` and fill in your keys:
-```
-GROQ_API_KEY=your_groq_key
-GEMINI_API_KEY=your_gemini_key
-REDDIT_CLIENT_ID=your_client_id
-REDDIT_SECRET=your_secret
+```bash
+docker build -t memeradar .
+docker run -p 5000:5000 --env-file backend/.env memeradar
 ```
 
-## 🧠 Features
+For Docker-based deploys, keep your secrets in `backend/.env` or the platform's secret manager and set `DEMO_MODE=false` for live providers.
 
-- **4 Hype Stages**: Early Whisper → Building Momentum → Peak Frenzy → Cooling Down
-- **AI Sentiment Analysis**: Groq Llama3 with Gemini fallback
-- **Moonshot Probability**: 0-100% chance of 2x in 48hrs
-- **Hype Replay**: Historical case studies (PEPE, DOGE, FLOKI, BONK)
-- **Coin Compare**: Side-by-side signal comparison
-- **Real-time Alerts**: Toast notifications with sound
+## CI / Backup Path
 
-## 🏗️ Tech Stack
+- GitHub Actions runs a build check on every push and pull request through `.github/workflows/ci.yml`.
+- Use the Dockerfile as the backup deployment path if the platform-specific deploy fails.
+- Primary deploy setup should provide `backend/.env` secrets and expose port `5000`.
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18, Vite, Tailwind CSS, Recharts, Zustand |
-| Backend | Node.js, Express, node-cache |
-| AI | Groq (Llama3) → Gemini (fallback) |
-| Data | Reddit API, CoinGecko, Fear & Greed Index |
+## API Keys
+
+| Service | Setup |
+| --- | --- |
+| Groq | Create an API key in the Groq console |
+| Gemini | Create a key in Google AI Studio |
+| Reddit | Create a script app in Reddit developer settings |
+| YouTube | Enable the YouTube Data API in Google Cloud and create an API key |
+
+## Features
+
+- Reddit or YouTube as the selectable social source
+- Live DEXScreener snapshots in the compare view
+- CoinGecko market data
+- Groq with Gemini fallback for analysis
+- Demo mode fallback when a provider is unavailable
+
+## Tech Stack
+
+- Frontend: React, Vite, Tailwind CSS, Zustand
+- Backend: Node.js, Express
+- Data: Reddit API, YouTube Data API, CoinGecko, DEXScreener, Fear and Greed Index
+- AI: Groq, Gemini

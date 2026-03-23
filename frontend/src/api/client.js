@@ -17,9 +17,29 @@ export async function fetchCoinPrice(coinId) {
   return response.data;
 }
 
-export async function fetchRedditPosts(coin) {
-  const response = await api.get(`/api/reddit/${coin}`);
+export async function fetchCryptoPanicNews(coin) {
+  const response = await api.get(`/api/social/cryptopanic/${coin}`);
   return response.data;
+}
+
+export async function fetchYouTubePosts(coin) {
+  const response = await api.get(`/api/youtube/${coin}`);
+  return response.data;
+}
+
+export async function fetchLunarCrushData(coin) {
+  const response = await api.get(`/api/social/lunarcrush/${coin}`);
+  return response.data;
+}
+
+export async function fetchSocialPosts(source, coin) {
+  if (source === 'youtube') {
+    return fetchYouTubePosts(coin);
+  }
+  if (source === 'lunarcrush') {
+    return fetchLunarCrushData(coin);
+  }
+  return fetchCryptoPanicNews(coin);
 }
 
 export async function analyzeSentiment(coin, posts) {
@@ -65,6 +85,18 @@ export async function fetchFearGreed() {
   } catch {
     return { value: '72', value_classification: 'Greed' };
   }
+}
+
+export async function searchDexScreenerPairs(query) {
+  const response = await api.get('/api/dexscreener/search', {
+    params: { q: query },
+  });
+  return response.data;
+}
+
+export async function fetchDexScreenerPair(chainId, pairId) {
+  const response = await api.get(`/api/dexscreener/pair/${chainId}/${pairId}`);
+  return response.data;
 }
 
 export default api;
